@@ -11,7 +11,7 @@ class ActivationTorchScript {
     
     // Init models
     private lazy var rnn_module: TorchModule = {
-        if let filePath = Bundle.main.path(forResource: "rnn", ofType: ".pt"), let module =
+        if let filePath = Bundle.main.path(forResource: "parallel_birnn", ofType: ".pt"), let module =
             TorchModule(fileAtPath: filePath) {
             return module
         } else {

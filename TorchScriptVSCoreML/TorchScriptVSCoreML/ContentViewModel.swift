@@ -14,7 +14,7 @@ class ContentViewModel: ObservableObject {
     
     func computeCoreMLPredictions(timesteps: Int) {
         let start = DispatchTime.now()
-        activationCoreML.computePredictions(nbRows: timesteps, nbColumns: 162) { result in
+        activationCoreML.computePredictions(nbRows: timesteps, nbColumns: 314) { result in
             switch result {
             case .success(_):
                 let computeTime = Float(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000_000
@@ -28,7 +28,7 @@ class ContentViewModel: ObservableObject {
     
     func computeTorchScriptPredictions(timesteps: Int) {
         let start = DispatchTime.now()
-        activationTorchScript.computePredictions(nbRows: timesteps, nbColumns: 162) { result in
+        activationTorchScript.computePredictions(nbRows: timesteps, nbColumns: 314) { result in
             switch result {
             case .success(_):
                 let computeTime = Float(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000_000

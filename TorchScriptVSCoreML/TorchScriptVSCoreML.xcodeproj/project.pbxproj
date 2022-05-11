@@ -15,8 +15,8 @@
 		46ACC47D282A9E3D00EB7EF7 /* ActivationTorchScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46ACC47B282A9E3D00EB7EF7 /* ActivationTorchScript.swift */; };
 		46ACC47F282A9E4D00EB7EF7 /* ContentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46ACC47E282A9E4D00EB7EF7 /* ContentViewModel.swift */; };
 		46ACC488282A9F5700EB7EF7 /* TorchModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = 46ACC487282A9F5700EB7EF7 /* TorchModule.mm */; };
-		46ACC49A282C078B00EB7EF7 /* rnn.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 46ACC498282C078B00EB7EF7 /* rnn.mlmodel */; };
-		46ACC49B282C078B00EB7EF7 /* rnn.pt in Resources */ = {isa = PBXBuildFile; fileRef = 46ACC499282C078B00EB7EF7 /* rnn.pt */; };
+		46ACC49E282C085000EB7EF7 /* parallel_birnn.pt in Resources */ = {isa = PBXBuildFile; fileRef = 46ACC49C282C085000EB7EF7 /* parallel_birnn.pt */; };
+		46ACC49F282C085000EB7EF7 /* birnn.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 46ACC49D282C085000EB7EF7 /* birnn.mlmodel */; };
 		7D3AD5B2634F2A0B61D7BDF5 /* Pods_TorchScriptVSCoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB298CEE623ADBEA4345EAB7 /* Pods_TorchScriptVSCoreML.framework */; };
 /* End PBXBuildFile section */
 
@@ -33,8 +33,8 @@
 		46ACC486282A9F5600EB7EF7 /* TorchScriptVSCoreML-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TorchScriptVSCoreML-Bridging-Header.h"; sourceTree = "<group>"; };
 		46ACC487282A9F5700EB7EF7 /* TorchModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TorchModule.mm; sourceTree = "<group>"; };
 		46ACC489282A9F7200EB7EF7 /* TorchModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TorchModule.h; sourceTree = "<group>"; };
-		46ACC498282C078B00EB7EF7 /* rnn.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = rnn.mlmodel; sourceTree = "<group>"; };
-		46ACC499282C078B00EB7EF7 /* rnn.pt */ = {isa = PBXFileReference; lastKnownFileType = file; path = rnn.pt; sourceTree = "<group>"; };
+		46ACC49C282C085000EB7EF7 /* parallel_birnn.pt */ = {isa = PBXFileReference; lastKnownFileType = file; path = parallel_birnn.pt; sourceTree = "<group>"; };
+		46ACC49D282C085000EB7EF7 /* birnn.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = birnn.mlmodel; sourceTree = "<group>"; };
 		B0A77E76D99BBA283D610730 /* Pods-TorchScriptVSCoreML.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TorchScriptVSCoreML.debug.xcconfig"; path = "Target Support Files/Pods-TorchScriptVSCoreML/Pods-TorchScriptVSCoreML.debug.xcconfig"; sourceTree = "<group>"; };
 		EB298CEE623ADBEA4345EAB7 /* Pods_TorchScriptVSCoreML.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TorchScriptVSCoreML.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -96,8 +96,8 @@
 		46ACC480282A9E7400EB7EF7 /* MLModel */ = {
 			isa = PBXGroup;
 			children = (
-				46ACC498282C078B00EB7EF7 /* rnn.mlmodel */,
-				46ACC499282C078B00EB7EF7 /* rnn.pt */,
+				46ACC49D282C085000EB7EF7 /* birnn.mlmodel */,
+				46ACC49C282C085000EB7EF7 /* parallel_birnn.pt */,
 			);
 			path = MLModel;
 			sourceTree = "<group>";
@@ -189,8 +189,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				46ACC49E282C085000EB7EF7 /* parallel_birnn.pt in Resources */,
 				46ACC474282A9C3700EB7EF7 /* Preview Assets.xcassets in Resources */,
-				46ACC49B282C078B00EB7EF7 /* rnn.pt in Resources */,
 				46ACC471282A9C3700EB7EF7 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -231,7 +231,7 @@
 				46ACC47D282A9E3D00EB7EF7 /* ActivationTorchScript.swift in Sources */,
 				46ACC488282A9F5700EB7EF7 /* TorchModule.mm in Sources */,
 				46ACC46F282A9C3300EB7EF7 /* ContentView.swift in Sources */,
-				46ACC49A282C078B00EB7EF7 /* rnn.mlmodel in Sources */,
+				46ACC49F282C085000EB7EF7 /* birnn.mlmodel in Sources */,
 				46ACC46D282A9C3300EB7EF7 /* TorchScriptVSCoreMLApp.swift in Sources */,
 				46ACC47F282A9E4D00EB7EF7 /* ContentViewModel.swift in Sources */,
 			);

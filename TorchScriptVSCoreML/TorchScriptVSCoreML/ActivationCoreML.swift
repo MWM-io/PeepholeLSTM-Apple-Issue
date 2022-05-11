@@ -10,7 +10,7 @@ import Foundation
 
 class ActivationCoreML {
     
-    typealias MLModel = rnn
+    typealias MLModel = birnn
     var model: MLModel!
     
     public init() {

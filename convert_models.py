@@ -1,7 +1,8 @@
 import torch as th
 import coremltools as ct
+from typing import Tuple
 from tensorflow.python.keras.layers.recurrent import PeepholeLSTMCell
-from keras.layers import RNN, Dense
+from keras.layers import RNN, Dense, Bidirectional
 from keras.models import Sequential
 from torch.utils import mobile_optimizer
 
@@ -50,14 +51,10 @@ class LSTMStep(th.nn.Module):
         self.tanh = th.nn.Tanh()
 
     def forward(self,
-                xt,  # type: th.Tensor
-                ht,  # type: th.Tensor
-                ct  # type: th.Tensor
-                ):
-        """
-        input size: [sequence_length, input_size]
-        """
-        # type: (...) --> Tupel[Tensor, Tensor]
+                xt: th.Tensor,
+                ht: th.Tensor,
+                ct: th.Tensor
+                ) -> Tuple[th.Tensor, th.Tensor]:
         it = self.sigmoid(th.matmul(self.input_weights, xt) +
                           th.matmul(self.input_recurrent_weights, ht) +
                           self.input_peephole_weights * ct +
@@ -93,19 +90,47 @@ class LSTMCell(th.nn.Module):
             LSTMStep(input_size, hidden_size), (x0, h0, c0))
 
     def forward(self,
-                input
-                ):
-        """
-        input size: [sequence_length, input_size]
-        """
-        # type: (th.Tensor) --> th.Tensor
-
+                input: th.Tensor
+                ) -> th.Tensor:
         ht, ct = th.zeros(self.hidden_size), th.zeros(self.hidden_size)
         out = []
         for xt in input:
             ht, ct = self.lstm_step(xt, ht, ct)
             out.append(ht.unsqueeze(0))
         return th.cat(out, dim=0)
+
+
+class ParallelBiLSTMCell(th.nn.Module):
+
+    def __init__(self, input_size, hidden_size, parallel=False):
+        super().__init__()
+
+        self.fwd = LSTMCell(input_size, hidden_size)
+        self.bwd = LSTMCell(input_size, hidden_size)
+
+    def forward(self,
+                input: th.Tensor
+                ) -> th.Tensor:
+        fwd_out = th.jit.fork(self.fwd, input)
+        bwd_out = th.flip(self.bwd(th.flip(input, [0])), [0])
+        fwd_out = th.jit.wait(fwd_out)
+        return th.cat([fwd_out, bwd_out], dim=1)
+
+
+class BiLSTMCell(th.nn.Module):
+
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+
+        self.fwd = LSTMCell(input_size, hidden_size)
+        self.bwd = LSTMCell(input_size, hidden_size)
+
+    def forward(self,
+                input: th.Tensor
+                ) -> th.Tensor:
+        fwd_out = self.fwd(input)
+        bwd_out = th.flip(self.bwd(th.flip(input, [0])), [0])
+        return th.cat([fwd_out, bwd_out], dim=1)
 
 
 class FeedForwardLayer(th.nn.Module):
@@ -118,70 +143,71 @@ class FeedForwardLayer(th.nn.Module):
         self.sigmoid = th.nn.Sigmoid()
 
     def forward(self,
-                input
-                ):
-        """
-        input size: [sequence_length, input_size]
-        """
-        # type: (th.Tensor) --> th.Tensor
-
+                input: th.Tensor
+                ) -> th.Tensor:
         return self.sigmoid(th.matmul(input, self.weights) + self.bias)
 
 
 class RNNTorchScript(th.nn.Module):
 
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size, hidden_size, bidirectional=False, parallel=False):
         super().__init__()
 
-        self.lstm0 = LSTMCell(input_size, hidden_size)
-        self.lstm1 = LSTMCell(hidden_size, hidden_size)
-        self.lstm2 = LSTMCell(hidden_size, hidden_size)
-        self.ffl = FeedForwardLayer(hidden_size)
+        if bidirectional:
+            if parallel:
+                cell = ParallelBiLSTMCell
+            else:
+                cell = BiLSTMCell
+            self.lstm0 = cell(input_size, hidden_size)
+            self.lstm1 = cell(2*hidden_size, hidden_size)
+            self.lstm2 = cell(2*hidden_size, hidden_size)
+            self.ffl = FeedForwardLayer(2*hidden_size)
+        else:
+            self.lstm0 = LSTMCell(input_size, hidden_size)
+            self.lstm1 = LSTMCell(hidden_size, hidden_size)
+            self.lstm2 = LSTMCell(hidden_size, hidden_size)
+            self.ffl = FeedForwardLayer(hidden_size)
 
     def forward(self,
-                input
-                ):
-        """
-        input size: [sequence_length, input_size]
-        """
-        # type: (Tensor) --> Tensor
-
+                input: th.Tensor
+                ) -> th.Tensor:
         x = self.lstm0(input)
         x = self.lstm1(x)
         x = self.lstm2(x)
         return self.ffl(x)
 
-# Convert model to TorchScript
-rnn = RNNTorchScript(162, 25)
-rnn_ts = th.jit.script(rnn)
-rnn_ts_opti = mobile_optimizer.optimize_for_mobile(rnn_ts)
-rnn_ts_opti.save('TorchScriptVSCoreML/TorchScriptVSCoreML/MLModel/rnn.pt')
+# Convert parallel bidirectional model to TorchScript
+birnn = RNNTorchScript(314, 25, bidirectional=True, parallel=True)
+birnn_ts = th.jit.script(birnn)
+birnn_ts_opti = mobile_optimizer.optimize_for_mobile(birnn_ts)
+birnn_ts_opti.save(
+    'TorchScriptVSCoreML/TorchScriptVSCoreML/MLModel/parallel_birnn.pt')
 
 
 # ================ #
 #      COREML      #
 # ================ #
 
-
+# Convert bidirectional to CoreML
 length = None
-n_features = 162
+n_features = 314
 n_hidden = 25
 
-rnn_keras = Sequential()
-rnn_keras.add(RNN(PeepholeLSTMCell(
-    units=n_hidden), return_sequences=True, input_shape=(length, n_features)))
-rnn_keras.add(RNN(PeepholeLSTMCell(units=n_hidden), return_sequences=True))
-rnn_keras.add(RNN(PeepholeLSTMCell(units=n_hidden), return_sequences=True))
-rnn_keras.add(Dense(1, activation='sigmoid'))
-rnn_keras.summary()
+birnn_keras = Sequential()
+birnn_keras.add(Bidirectional(RNN(PeepholeLSTMCell(
+    units=n_hidden), return_sequences=True), input_shape=(length, n_features)))
+birnn_keras.add(Bidirectional(RNN(PeepholeLSTMCell(units=n_hidden), return_sequences=True)))
+birnn_keras.add(Bidirectional(RNN(PeepholeLSTMCell(units=n_hidden), return_sequences=True)))
+birnn_keras.add(Dense(1, activation='softmax'))
+birnn_keras.summary()
 
 # Convert model to CoreML
-rnn_coreml = ct.convert(rnn_keras)
-mlmodel_path = "TorchScriptVSCoreML/TorchScriptVSCoreML/MLModel/rnn.mlmodel"
-rnn_coreml.save(mlmodel_path)
+birnn_coreml = ct.convert(birnn_keras)
+mlmodel_path = "TorchScriptVSCoreML/TorchScriptVSCoreML/MLModel/birnn.mlmodel"
+birnn_coreml.save(mlmodel_path)
 
 # Rename input/output
 spec = ct.utils.load_spec(mlmodel_path)
-ct.utils.rename_feature(spec, "rnn_input", "melspec")
+ct.utils.rename_feature(spec, "bidirectional_input", "melspec")
 ct.utils.rename_feature(spec, "Identity", "activations")
 ct.utils.save_spec(spec, mlmodel_path)
