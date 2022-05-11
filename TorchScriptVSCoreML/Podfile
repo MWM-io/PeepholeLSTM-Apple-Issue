@@ -1,0 +1,10 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '9.0'
+
+target 'TorchScriptVSCoreML' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  pod 'LibTorch', '~> 1.7.1'
+  use_frameworks!
+  # Pods for TorchScriptVSCoreML
+
+end
